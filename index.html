@@ -1117,12 +1117,25 @@ footer a:hover { border-color: var(--ink); color: var(--ink); }
   footer { padding: 28px 32px; gap: 28px; }
 }
 
+/* 881–1080px — narrow laptop / tablet landscape: stop the bleeding logo from
+   colliding with the headline and re-anchor the caption ABOVE the logo. */
+@media(min-width: 881px) and (max-width: 1080px) {
+  .hero-type { padding: 90px 0 290px; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; }
+  .hero-logo { height: clamp(170px, 18vw, 200px); bottom: 20px; }
+  .hero-logo-text {
+    bottom: calc(20px + 0.14 * clamp(170px, 18vw, 200px));
+    padding-right: 32px;
+    font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+    letter-spacing: .38em;
+  }
+}
+
 /* ≤ 880px — tablet portrait: stack 2-col sections */
 @media(max-width: 880px) {
   .hero { min-height: auto; }
   .hero-type { padding: 70px 0 200px; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; }
   .hero-logo { height: 162px; bottom: 16px; }
-  .hero-logo-text { bottom: 190px; padding-right: 28px; font-size: 1.5rem; letter-spacing: .38em; }
+  .hero-logo-text { bottom: calc(16px + 0.14 * 162px); padding-right: 28px; font-size: 1.5rem; letter-spacing: .38em; }
     .hero-type > :not(.hero-logo):not(.hero-bg-word) { padding-left: 28px; padding-right: 28px; }
   .hero-h1 { font-size: clamp(2rem, 5.6vw, 3.6rem) !important; display: block !important; text-align: right; white-space: normal; }
   .hh-line1 { display: inline; white-space: normal; }
@@ -1826,6 +1839,36 @@ document.querySelectorAll('.rev, .step').forEach(el => obs.observe(el));
   }, { once: true });
 })();
 
+</script>
+
+<script>
+/* Polskie sieroty / wiszące spójniki — twarda spacja po jednoliterowych słowach
+   (a, i, o, u, w, z). Działa TYLKO na wąskich ekranach (≤880px) i jest w pełni
+   odwracalny: po powiększeniu okna tekst wraca do zwykłych spacji, więc układ
+   na laptopie pozostaje nietknięty. */
+(function () {
+  var ONE = /\b([aiouwzAIOUWZ])[ \t\u00A0]+/g;
+  function tighten(s) { return s.replace(ONE, '$1\u00A0'); }
+  function loosen(s)  { return s.replace(/\u00A0/g, ' '); }
+  var SEL = 'p, .hero-desc, .hero-spaces, .b-body, .insight-body, .whom-title, .signup-sub, .step-body, .contact-note';
+
+  function walk(root, fn) {
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var nodes = [], n;
+    while ((n = w.nextNode())) nodes.push(n);
+    nodes.forEach(function (t) { t.nodeValue = fn(t.nodeValue); });
+  }
+
+  var mq = window.matchMedia('(max-width: 880px)');
+  function apply() {
+    var fn = mq.matches ? tighten : loosen;
+    document.querySelectorAll(SEL).forEach(function (el) { walk(el, fn); });
+  }
+
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply);
+  else if (mq.addListener) mq.addListener(apply);
+})();
 </script>
 
 <script src="tweaks.js"></script>
